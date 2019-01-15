@@ -6,4 +6,7 @@ module.exports = function(app, uploadOptions) {
 	
 	app.route('/upload')
 		.post(uploadOptions, uiControls.uploadFiles);
+
+	app.route('/sample')
+		.get(uiControls.downloadSample)
 }
