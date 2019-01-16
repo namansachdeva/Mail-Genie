@@ -14,7 +14,10 @@ exports.downloadSample = function(req,res) {
 
 	try {
 		html = fs.readFileSync('./uploads/templateSelected.html', 'utf8');
-		options = { format: 'A4' };
+		options = { height: '676px',
+					width: '878px',
+					timeout: 30000,
+					base: 'file://' + path.join(__dirname, '../public/img/') };
 	} catch(err) {
 		res.send("No Template Available.")
 	}
@@ -38,6 +41,9 @@ exports.downloadSample = function(req,res) {
 exports.sendEmails = function(req, res) {
 	var csv = require('csv');
 	var path = require('path');
+	var fs = require('fs');
+	var pdf = require('html-pdf');
+	
 	var obj = csv();
 
 	function AttendeeData(name, email, phone) {
@@ -47,17 +53,29 @@ exports.sendEmails = function(req, res) {
 	};
 
 	var Attendees = [];
+	var num = 0;
 	var readCSVPromise = new Promise(function(resolve, reject) {
 		obj.from.path(path.join(__dirname, '../uploads/sheetSelected.csv')).to.array(function(data) {
 			for (var index = 0; index < data.length; index++) {
+				num++;
 	        	Attendees.push(new AttendeeData(data[index][0], data[index][1], data[index][2]));
 	    	}
 	    	resolve(Attendees);
 		});
 	})
 
+	var htmlSource;
 	readCSVPromise.then(function(result) {
 	    console.log(result);
-	    // send mail here.
+		htmlSource = fs.readFileSync("./uploads/templateSelected.html", "utf8");
+	}).then(function(){
+		var templateStr = htmlSource.toString();
+		var candidateName = "NAMAN SACHDEVA"
+		console.log(Attendees[0]);
+		for (var index = 0; index < num; index++) {
+	        var tempHTML = templateStr.replace("mojojojo", Attendees[index].Name)
+			console.log(tempHTML);
+			//send mail here
+	    }
 	})
 }
