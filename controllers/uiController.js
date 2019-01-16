@@ -97,7 +97,7 @@ exports.sendEmails = function(req, res) {
 									service: 'Gmail',
 						  			auth: {
 						    		user: 'namansachdevaa@gmail.com',
-						    		pass: 'axzs28@!'
+						    		pass: '<password here>'
 						 }
 					});
 				
