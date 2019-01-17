@@ -44,12 +44,13 @@ exports.sendEmails = function(req, res) {
 	var fs = require('fs');
 	var pdf = require('html-pdf');
 	const nodemailer = require('nodemailer');
+	var config = require('../config');
+
 	var obj = csv();
 
-	function AttendeeData(name, email, phone) {
+	function AttendeeData(name, email) {
 	    this.Name = name;
 	    this.EmailID = email;
-	    this.PhoneNo = phone;
 	};
 
 	var Attendees = [];
@@ -58,7 +59,7 @@ exports.sendEmails = function(req, res) {
 		obj.from.path(path.join(__dirname, '../uploads/sheetSelected.csv')).to.array(function(data) {
 			for (var index = 0; index < data.length; index++) {
 				num++;
-	        	Attendees.push(new AttendeeData(data[index][0], data[index][1], data[index][2]));
+	        	Attendees.push(new AttendeeData(data[index][0], data[index][1]));
 	    	}
 	    	resolve(Attendees);
 		});
@@ -78,13 +79,23 @@ exports.sendEmails = function(req, res) {
 					base: 'file://' + path.join(__dirname, '../public/img/') };
 
 		// TODO make this synchronous 
-		for (var index = 0; index < num; index++) {
-	        
-	        var tempHTML = templateStr.replace("mojojojo", Attendees[index].Name)
-			var emailP = Attendees[index].EmailID;
+
+		// var i = 0;
+  //           async.each(result,function(item){
+  //           normal_mail(item.email, item.firstName, subject, message);
+  //               i++;
+  //           },function(err){
+  //               console.log("hello");
+  //             res.redirect('/admin');
+  //           });
+  //           if(i == result.length)
+  //              res.redirect('/admin');
+
+        function prepareAndMail(index) {
+        	var tempHTML = templateStr.replace("mojojojo", Attendees[index].Name)
 
 			var createPromiseForEach = new Promise(function(resolve, reject) {
-				pdf.create(tempHTML, options).toFile('./pdfs/certificate.pdf', function(err, res) {
+				pdf.create(tempHTML, options).toFile('./pdfs/certificate'+Attendees[index].Name+'.pdf', function(err, res) {
 				  if(err)
 				  	reject(err);
 				  else
@@ -96,20 +107,19 @@ exports.sendEmails = function(req, res) {
 				const transporter = nodemailer.createTransport({
 									service: 'Gmail',
 						  			auth: {
-						    		user: 'namansachdevaa@gmail.com',
-						    		pass: '<password here>'
+						    		user: config.email,
+						    		pass: config.password
 						 }
 					});
 				
-				console.log(emailP)
 				const options = {
-						from: 'namansachdevaa@gmail.com',
-						to: emailP,
+						from: config.email,
+						to: Attendees[index].EmailID,
 						subject: 'Your Android Development Workshop certificate is here!',
-						text: 'Hello World',
+						text: 'Hi, \n \nHere is your certificate for participating in the ANDROID DEVELOPMENT WORKSHOP organized by Manan - A Techno Surge on January 19, 2019 at YMCA University of Science and Technology, Faridabad. \n \nThanks for making it a great workshop. \n \nBest, \nNaman Sachdeva \nSecretary, Manan - A Techno Surge \n+91 8222831183',
 						attachments: [
 						    {
-						     path: path.join(__dirname, '../pdfs/certificate.pdf')
+						     path: path.join(__dirname, '../pdfs/certificate'+Attendees[index].Name+'.pdf')
 						    }
 						]
 					};
@@ -117,12 +127,17 @@ exports.sendEmails = function(req, res) {
 				transporter.sendMail(options, (error, info) =>{
 					if(error) {
 						console.log('----------------------ERROR---------------------------')
+						console.log(error)
 					} else {
 						console.log('----------------------DONE---------------------------')
 						console.log(info)
 					}
 				});
 			})
+        }
+		
+		for (var index = 0; index < num; index++) {
+	      	prepareAndMail(index)
 	    }
 	})
 	res.send("success")

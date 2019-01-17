@@ -18,6 +18,7 @@
   },
   "homepage": "https://github.com/namansachdeva/Mail-Genie#readme",
   "dependencies": {
+    "async": "^2.6.1",
     "body-parser": "^1.18.3",
     "csv": "^0.3.7",
     "ejs": "^2.6.1",
